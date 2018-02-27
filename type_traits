@@ -21,6 +21,7 @@
 #include <exception>
 #include <memory>
 #include <char_traits>
+#include <bits/remove_reference.hpp>
 
 #ifndef __HEADER_TYPE_TRAITS
 #define __HEADER_TYPE_TRAITS 1
