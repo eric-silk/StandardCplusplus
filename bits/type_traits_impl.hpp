@@ -64,6 +64,9 @@ struct remove_const<_Tp const>
 	typedef _Tp type;
 };
 
+template< class T >
+using remove_const_t = typename remove_const<T>::type;
+
 /// remove_volatile
 template <typename _Tp>
 struct remove_volatile
@@ -77,12 +80,20 @@ struct remove_volatile<_Tp volatile>
 	typedef _Tp type;
 };
 
+template< class T >
+using remove_volatile_t = typename remove_volatile<T>::type;
+
+
 /// remove_cv
 template <typename _Tp>
 struct remove_cv
 {
 	typedef typename remove_const<typename remove_volatile<_Tp>::type>::type type;
 };
+
+template< class T >
+using remove_cv_t = typename remove_cv<T>::type;
+
 
 // A conditional expression, but for types. If true, first, if false, second.
 // Primary template.
