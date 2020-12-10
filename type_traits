@@ -1308,6 +1308,14 @@ struct common_type<_Tp, _Up, _Vp...>
 {
 	typedef typename common_type<typename common_type<_Tp, _Up>::type, _Vp...>::type type;
 };
+
+template <class T>
+struct type_identity {
+	using type = T;
+};
+
+template <class T>
+using type_identity_t = typename type_identity<T>::type;
 }
 
 #pragma GCC visibility pop
