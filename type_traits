@@ -879,6 +879,9 @@ struct __is_direct_constructible_new_safe
 template <typename, typename>
 struct is_same;
 
+template< class T, class U >
+inline constexpr bool is_same_v = is_same<T, U>::value;
+
 template <typename, typename>
 struct is_base_of;
 
