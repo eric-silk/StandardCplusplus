@@ -1,0 +1,135 @@
+#pragma once
+
+#include <functional>
+#include <type_traits>
+#include <utility>
+
+namespace std
+{
+
+template <typename First, typename... Rest>
+struct tuple : public tuple<Rest...>
+{
+  tuple() = default;
+  tuple(First first, Rest... rest) : tuple<Rest...>(rest...), _item(first) {}
+
+  First _item;
+};
+
+template <typename First>
+struct tuple<First>
+{
+  tuple() = default;
+  tuple(First first) : _item(first) {}
+
+  First _item;
+};
+
+template<std::size_t I, class T>
+struct tuple_element;
+
+// recursive case
+template <std::size_t I, class Head, class... Tail>
+struct tuple_element<I, std::tuple<Head, Tail...>>
+	: std::tuple_element<I - 1, std::tuple<Tail...>>
+{
+};
+
+// base case
+template <class Head, class... Tail>
+struct tuple_element<0, std::tuple<Head, Tail...>>
+{
+	typedef Head type;
+};
+
+namespace detail {
+
+  template <int index, typename First, typename... Rest>
+  struct tuple_getter
+  {
+    static auto value(const tuple<First, Rest...> *t) -> decltype(tuple_getter<index - 1, Rest...>::value(t))
+    {
+      return tuple_getter<index - 1, Rest...>::value(t);
+    }
+
+	static auto value(tuple<First, Rest...> *t) -> decltype(tuple_getter<index - 1, Rest...>::value(t))
+    {
+      return tuple_getter<index - 1, Rest...>::value(t);
+    }
+  };
+
+  template <typename First, typename... Rest>
+  struct tuple_getter<0, First, Rest...>
+  {
+    static const First& value(const tuple<First, Rest...> *t)
+    {
+      return t->_item;
+    }
+
+	static First& value(tuple<First, Rest...> *t)
+    {
+      return t->_item;
+    }
+  };
+}
+
+template <size_t index, typename First, typename... Rest>
+auto get(const tuple<First, Rest...> &t) -> decltype(detail::tuple_getter<index, First, Rest...>::value(&t))
+{
+  return detail::tuple_getter<index, First, Rest...>::value(&t);
+}
+
+template <size_t index, typename First, typename... Rest>
+auto get(tuple<First, Rest...> &t) -> decltype(detail::tuple_getter<index, First, Rest...>::value(&t))
+{
+  return detail::tuple_getter<index, First, Rest...>::value(&t);
+}
+
+template< class T >
+class tuple_size; /*undefined*/
+
+template< class... Types >
+class tuple_size< std::tuple<Types...> >
+ : public std::integral_constant<std::size_t, sizeof...(Types)> { };
+
+template< class T >
+class tuple_size<const T>
+ : public std::integral_constant<std::size_t, tuple_size<T>::value> { };
+
+template< class T >
+class tuple_size< volatile T >
+ : public std::integral_constant<std::size_t, tuple_size<T>::value> { };
+
+template< class T >
+class tuple_size< const volatile T >
+ : public std::integral_constant<std::size_t, tuple_size<T>::value> { };
+
+#if __cplusplus >= 201703L // c++17
+template< class T >
+inline constexpr size_t tuple_size_v = tuple_size<T>::value;
+#endif
+
+namespace detail {
+	template <class T>
+	struct unwrap_refwrapper
+	{
+		using type = T;
+	};
+	
+	template <class T>
+	struct unwrap_refwrapper<reference_wrapper<T>>
+	{
+		using type = T&;
+	};
+	
+	template <class T>
+	using special_decay_t = typename unwrap_refwrapper<typename std::decay<T>::type>::type;
+}
+ 
+template <typename... Types>
+auto make_tuple(Types&&... args)
+{
+	return std::tuple<detail::special_decay_t<Types>...>(std::forward<Types>(args)...);
+}
+
+}
