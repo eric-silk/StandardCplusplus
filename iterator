@@ -18,6 +18,7 @@
 */
 
 #include <basic_definitions>
+#include <initializer_list>
 #include <iosfwd>
 #include <cstddef>
 #include <char_traits>
@@ -224,6 +225,138 @@ namespace std{
 	template <typename T>
 	auto move(T& t) -> T&& {
 		return (T&&)t;
+	}
+
+	template <class _Tp, size_t _Np>
+	constexpr
+	_Tp*
+	begin(_Tp (&__array)[_Np])
+	{
+		return __array;
+	}
+
+	template <class _Tp, size_t _Np>
+	constexpr
+	_Tp*
+	end(_Tp (&__array)[_Np])
+	{
+		return __array + _Np;
+	}
+
+	template <class _Cp>
+	constexpr
+	auto
+	begin(_Cp& __c) -> decltype(__c.begin())
+	{
+		return __c.begin();
+	}
+
+	template <class _Cp>
+	constexpr
+	auto
+	begin(const _Cp& __c) -> decltype(__c.begin())
+	{
+		return __c.begin();
+	}
+
+	template <class _Cp>
+	constexpr
+	auto
+	end(_Cp& __c) -> decltype(__c.end())
+	{
+		return __c.end();
+	}
+
+	template <class _Cp>
+	constexpr
+	auto
+	end(const _Cp& __c) -> decltype(__c.end())
+	{
+		return __c.end();
+	}
+
+	template <class _Tp, size_t _Np>
+	constexpr
+	reverse_iterator<_Tp*> rbegin(_Tp (&__array)[_Np])
+	{
+		return reverse_iterator<_Tp*>(__array + _Np);
+	}
+
+	template <class _Tp, size_t _Np>
+	constexpr
+	reverse_iterator<_Tp*> rend(_Tp (&__array)[_Np])
+	{
+		return reverse_iterator<_Tp*>(__array);
+	}
+
+	template <class _Ep>
+	constexpr
+	reverse_iterator<const _Ep*> rbegin(initializer_list<_Ep> __il)
+	{
+		return reverse_iterator<const _Ep*>(__il.end());
+	}
+
+	template <class _Ep>
+	constexpr
+	reverse_iterator<const _Ep*> rend(initializer_list<_Ep> __il)
+	{
+		return reverse_iterator<const _Ep*>(__il.begin());
+	}
+
+	template <class _Cp>
+	constexpr
+	auto cbegin(const _Cp& __c) -> decltype(begin(__c))
+	{
+		return begin(__c);
+	}
+
+	template <class _Cp>
+	constexpr
+	auto cend(const _Cp& __c) -> decltype(end(__c))
+	{
+		return end(__c);
+	}
+
+	template <class _Cp>
+	constexpr
+	auto rbegin(_Cp& __c) -> decltype(__c.rbegin())
+	{
+		return __c.rbegin();
+	}
+
+	template <class _Cp>
+	constexpr
+	auto rbegin(const _Cp& __c) -> decltype(__c.rbegin())
+	{
+		return __c.rbegin();
+	}
+
+	template <class _Cp>
+	constexpr
+	auto rend(_Cp& __c) -> decltype(__c.rend())
+	{
+		return __c.rend();
+	}
+
+	template <class _Cp>
+	constexpr
+	auto rend(const _Cp& __c) -> decltype(__c.rend())
+	{
+		return __c.rend();
+	}
+
+	template <class _Cp>
+	constexpr
+	auto crbegin(const _Cp& __c) -> decltype(rbegin(__c))
+	{
+		return rbegin(__c);
+	}
+
+	template <class _Cp>
+	constexpr
+	auto crend(const _Cp& __c) -> decltype(rend(__c))
+	{
+		return rend(__c);
 	}
 
 }
