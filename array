@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include "bits/std_size.hpp"
 
 namespace std {
 

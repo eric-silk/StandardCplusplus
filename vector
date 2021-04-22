@@ -28,6 +28,8 @@
 #include <type_traits>
 #include <initializer_list>
 
+#include "bits/std_size.hpp"
+
 #ifndef __STD_HEADER_VECTOR
 #define __STD_HEADER_VECTOR
 
