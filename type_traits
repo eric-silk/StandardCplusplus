@@ -107,6 +107,9 @@ struct enable_if<true, _Tp>
 	typedef _Tp type;
 };
 
+template <bool Cond, typename T = void>
+using enable_if_t = enable_if<Cond, T>;
+
 /// add_const
 template <typename _Tp>
 struct add_const
@@ -135,22 +138,22 @@ struct remove_extent { typedef T type; };
 template<class T>
 struct remove_extent<T[]> { typedef T type; };
  
-template<class T, std::size_t N>
+template<class T, size_t N>
 struct remove_extent<T[N]> { typedef T type; };
 
 /// decay
 template< class T >
 struct decay {
 private:
-    typedef typename std::remove_reference<T>::type U;
+    typedef typename remove_reference<T>::type U;
 public:
-    typedef typename std::conditional< 
-        std::is_array<U>::value,
-        typename std::remove_extent<U>::type*,
-        typename std::conditional< 
-            std::is_function<U>::value,
-            typename std::add_pointer<U>::type,
-            typename std::remove_cv<U>::type
+    typedef typename conditional< 
+        is_array<U>::value,
+        typename remove_extent<U>::type*,
+        typename conditional< 
+            is_function<U>::value,
+            typename add_pointer<U>::type,
+            typename remove_cv<U>::type
         >::type
     >::type type;
 };
@@ -181,59 +184,59 @@ class result_of;
 
 namespace detail {
 template <class T>
-struct is_reference_wrapper : std::false_type {};
+struct is_reference_wrapper : false_type {};
 template <class U>
-struct is_reference_wrapper<reference_wrapper<U>> : std::true_type {};
+struct is_reference_wrapper<reference_wrapper<U>> : true_type {};
  
 template <class Base, class T, class Derived, class... Args>
 auto INVOKE(T Base::*pmf, Derived&& ref, Args&&... args)
- -> typename std::enable_if<std::is_function<T>::value &&
-                     is_base_of<Base, typename std::decay<Derived>::type>::value,
-    decltype((std::forward<Derived>(ref).*pmf)(std::forward<Args>(args)...))>::type;
+ -> typename enable_if<is_function<T>::value &&
+                     is_base_of<Base, typename decay<Derived>::type>::value,
+    decltype((forward<Derived>(ref).*pmf)(forward<Args>(args)...))>::type;
  
 template <class Base, class T, class RefWrap, class... Args>
 auto INVOKE(T Base::*pmf, RefWrap&& ref, Args&&... args)
- -> typename std::enable_if<std::is_function<T>::value &&
-                     is_reference_wrapper<typename std::decay<RefWrap>::type>::value,
-    decltype((ref.get().*pmf)(std::forward<Args>(args)...))>::type;
+ -> typename enable_if<is_function<T>::value &&
+                     is_reference_wrapper<typename decay<RefWrap>::type>::value,
+    decltype((ref.get().*pmf)(forward<Args>(args)...))>::type;
  
 template <class Base, class T, class Pointer, class... Args>
 auto INVOKE(T Base::*pmf, Pointer&& ptr, Args&&... args)
- -> typename std::enable_if<std::is_function<T>::value &&
-                     !is_reference_wrapper<typename std::decay<Pointer>::type>::value &&
-                     !std::is_base_of<Base, typename std::decay<Pointer>::type>::value,
-    decltype(((*std::forward<Pointer>(ptr)).*pmf)(std::forward<Args>(args)...))>::type;
+ -> typename enable_if<is_function<T>::value &&
+                     !is_reference_wrapper<typename decay<Pointer>::type>::value &&
+                     !is_base_of<Base, typename decay<Pointer>::type>::value,
+    decltype(((*forward<Pointer>(ptr)).*pmf)(forward<Args>(args)...))>::type;
  
 template <class Base, class T, class Derived>
 auto INVOKE(T Base::*pmd, Derived&& ref)
- -> typename std::enable_if<!std::is_function<T>::value &&
-                     std::is_base_of<Base, typename std::decay<Derived>::type>::value,
-    decltype(std::forward<Derived>(ref).*pmd)>::type;
+ -> typename enable_if<!is_function<T>::value &&
+                     is_base_of<Base, typename decay<Derived>::type>::value,
+    decltype(forward<Derived>(ref).*pmd)>::type;
  
 template <class Base, class T, class RefWrap>
 auto INVOKE(T Base::*pmd, RefWrap&& ref)
- -> typename std::enable_if<!std::is_function<T>::value &&
-                     is_reference_wrapper<typename std::decay<RefWrap>::type>::value,
+ -> typename enable_if<!is_function<T>::value &&
+                     is_reference_wrapper<typename decay<RefWrap>::type>::value,
     decltype(ref.get().*pmd)>::type;
  
 template <class Base, class T, class Pointer>
 auto INVOKE(T Base::*pmd, Pointer&& ptr)
- -> typename std::enable_if<!std::is_function<T>::value &&
-                     !is_reference_wrapper<typename std::decay<Pointer>::type>::value &&
-                     !std::is_base_of<Base, typename std::decay<Pointer>::type>::value,
-    decltype((*std::forward<Pointer>(ptr)).*pmd)>::type;
+ -> typename enable_if<!is_function<T>::value &&
+                     !is_reference_wrapper<typename decay<Pointer>::type>::value &&
+                     !is_base_of<Base, typename decay<Pointer>::type>::value,
+    decltype((*forward<Pointer>(ptr)).*pmd)>::type;
  
 template <class Func, class... Args>
 auto INVOKE(Func&& f, Args&&... args)
- -> typename std::enable_if<!std::is_member_pointer<typename std::decay<Func>::type>::value,
-    decltype(std::forward<Func>(f)(std::forward<Args>(args)...))>::type;
+ -> typename enable_if<!is_member_pointer<typename decay<Func>::type>::value,
+    decltype(forward<Func>(f)(forward<Args>(args)...))>::type;
 } // namespace detail
  
 // Minimal C++11 implementation:
 template <class> struct result_of;
 template <class Func, class... ArgTypes>
 struct result_of<Func(ArgTypes...)> {
-    using type = decltype(detail::INVOKE(std::declval<Func>(), std::declval<ArgTypes>()...));
+    using type = decltype(detail::INVOKE(declval<Func>(), declval<ArgTypes>()...));
 };
 
 template< class T >
@@ -246,9 +249,9 @@ namespace detail {
 	template <typename AlwaysVoid, typename, typename...>
 	struct invoke_result { };
 	template <typename Func, typename...Args>
-	struct invoke_result<decltype(void(detail::INVOKE(std::declval<Func>(), std::declval<Args>()...))),
+	struct invoke_result<decltype(void(detail::INVOKE(declval<Func>(), declval<Args>()...))),
 	                 Func, Args...> {
-	    using type = decltype(detail::INVOKE(std::declval<Func>(), std::declval<Args>()...));
+	    using type = decltype(detail::INVOKE(declval<Func>(), declval<Args>()...));
 	};
 }
 
@@ -322,7 +325,7 @@ struct is_array
 {
 };
 
-template <typename _Tp, std::size_t _Size>
+template <typename _Tp, size_t _Size>
 struct is_array<_Tp[_Size]>
 		: public true_type
 {
@@ -349,20 +352,20 @@ struct __is_array_unknown_bounds
 /// extent
 template <typename, unsigned _Uint>
 struct extent
-		: public integral_constant<std::size_t, 0>
+		: public integral_constant<size_t, 0>
 {
 };
 
-template <typename _Tp, unsigned _Uint, std::size_t _Size>
+template <typename _Tp, unsigned _Uint, size_t _Size>
 struct extent<_Tp[_Size], _Uint>
-		: public integral_constant<std::size_t,
+		: public integral_constant<size_t,
 															 _Uint == 0 ? _Size : extent<_Tp, _Uint - 1>::value>
 {
 };
 
 template <typename _Tp, unsigned _Uint>
 struct extent<_Tp[], _Uint>
-		: public integral_constant<std::size_t,
+		: public integral_constant<size_t,
 															 _Uint == 0 ? 0 : extent<_Tp, _Uint - 1>::value>
 {
 };
@@ -374,7 +377,7 @@ struct remove_all_extents
 	typedef _Tp type;
 };
 
-template <typename _Tp, std::size_t _Size>
+template <typename _Tp, size_t _Size>
 struct remove_all_extents<_Tp[_Size]>
 {
 	typedef typename remove_all_extents<_Tp>::type type;
@@ -505,7 +508,7 @@ struct __is_nullptr_t_helper
 };
 
 template <>
-struct __is_nullptr_t_helper<std::nullptr_t>
+struct __is_nullptr_t_helper<nullptr_t>
 		: public true_type
 {
 };
@@ -609,20 +612,20 @@ struct __is_member_function_pointer_helper<_Tp _Cp::*>
 
 /// is_member_pointer
 template< class T >
-struct is_member_pointer_helper         : std::false_type {};
+struct is_member_pointer_helper         : false_type {};
  
 template< class T, class U >
-struct is_member_pointer_helper<T U::*> : std::true_type {};
+struct is_member_pointer_helper<T U::*> : true_type {};
  
 template< class T >
 struct is_member_pointer : 
-    is_member_pointer_helper<typename std::remove_cv<T>::type> {};
+    is_member_pointer_helper<typename remove_cv<T>::type> {};
 
 /// add_pointer
 namespace detail {
 template< class T, bool is_function_type = false >
 struct add_pointer {
-    using type = typename std::remove_reference<T>::type*;
+    using type = typename remove_reference<T>::type*;
 };
  
 template< class T >
@@ -643,7 +646,7 @@ struct add_pointer<T(Args..., ...), true> {
 } // namespace detail
  
 template< class T >
-struct add_pointer : detail::add_pointer<T, std::is_function<T>::value> {};
+struct add_pointer : detail::add_pointer<T, is_function<T>::value> {};
 
 /// is_member_function_pointer
 template <typename _Tp>
@@ -655,28 +658,28 @@ struct is_member_function_pointer
 
 /// is_base_of
 namespace details {
-    template <typename Base> std::true_type is_base_of_test_func(const volatile Base*);
-    template <typename Base> std::false_type is_base_of_test_func(const volatile void*);
+    template <typename Base> true_type is_base_of_test_func(const volatile Base*);
+    template <typename Base> false_type is_base_of_test_func(const volatile void*);
     template <typename Base, typename Derived>
-    using pre_is_base_of = decltype(is_base_of_test_func<Base>(std::declval<Derived*>()));
+    using pre_is_base_of = decltype(is_base_of_test_func<Base>(declval<Derived*>()));
  
     // with <experimental/type_traits>:
     // template <typename Base, typename Derived>
-    // using pre_is_base_of2 = std::experimental::detected_or_t<std::true_type, pre_is_base_of, Base, Derived>;
+    // using pre_is_base_of2 = experimental::detected_or_t<true_type, pre_is_base_of, Base, Derived>;
     template <typename Base, typename Derived, typename = void>
-    struct pre_is_base_of2 : public std::true_type { };
-    // note std::void_t is a C++17 feature
+    struct pre_is_base_of2 : public true_type { };
+    // note void_t is a C++17 feature
     template <typename Base, typename Derived>
-    struct pre_is_base_of2<Base, Derived, std::void_t<pre_is_base_of<Base, Derived>>> :
+    struct pre_is_base_of2<Base, Derived, void_t<pre_is_base_of<Base, Derived>>> :
         public pre_is_base_of<Base, Derived> { };
 }
  
 template <typename Base, typename Derived>
 struct is_base_of :
-    public std::conditional_t<
-        std::is_class<Base>::value && std::is_class<Derived>::value,
+    public conditional_t<
+        is_class<Base>::value && is_class<Derived>::value,
         details::pre_is_base_of2<Base, Derived>,
-        std::false_type
+        false_type
     > { };
 
 /// is_abstract
@@ -1227,7 +1230,7 @@ class __is_convertible_helper<_From, _To, false>
 	static void __test_aux(_To1);
 
 	template <typename _From1, typename _To1>
-	static decltype(__test_aux<_To1>(std::declval<_From1>()), __one())
+	static decltype(__test_aux<_To1>(declval<_From1>()), __one())
 	__test(int);
 
 	template <typename, typename>
@@ -1287,6 +1290,12 @@ struct has_virtual_destructor
 {
 };
 
+template <typename T>
+using is_trivially_destructible = has_trivial_destructor<T>;
+
+template <typename T>
+using is_trivially_destructible_v = typename is_trivially_destructible<T>::value;
+
 /// common_type
 template <typename... _Tp>
 struct common_type;
@@ -1316,7 +1325,8 @@ struct type_identity {
 
 template <class T>
 using type_identity_t = typename type_identity<T>::type;
-}
+
+} // namespace std
 
 #pragma GCC visibility pop
 

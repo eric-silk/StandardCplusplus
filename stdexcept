@@ -24,9 +24,6 @@
 #ifndef HEADER_STD_EXCEPTIONS
 #define HEADER_STD_EXCEPTIONS 1
 
-//Don't include support if not needed
-#ifdef __UCLIBCXX_EXCEPTION_SUPPORT__
-
 #pragma GCC visibility push(default)
 
 namespace std{
@@ -113,5 +110,4 @@ public:
 
 #pragma GCC visibility pop
 
-#endif
 #endif

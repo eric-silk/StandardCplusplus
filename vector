@@ -309,7 +309,7 @@ namespace std{
 		}
 
 		template <class InputIterator> inline void insert(iterator position, InputIterator first, InputIterator last){
-			typedef typename __is_integer<InputIterator>::value __some_type;
+			typedef typename is_integral<InputIterator>::value __some_type;
 			_dispatch_insert(position, first, last, __some_type());
 		}
 

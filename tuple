@@ -25,22 +25,25 @@ struct tuple<First>
   First _item;
 };
 
-template<std::size_t I, class T>
+template<size_t I, class T>
 struct tuple_element;
 
 // recursive case
-template <std::size_t I, class Head, class... Tail>
-struct tuple_element<I, std::tuple<Head, Tail...>>
-	: std::tuple_element<I - 1, std::tuple<Tail...>>
+template <size_t I, class Head, class... Tail>
+struct tuple_element<I, tuple<Head, Tail...>>
+	: tuple_element<I - 1, tuple<Tail...>>
 {
 };
 
 // base case
 template <class Head, class... Tail>
-struct tuple_element<0, std::tuple<Head, Tail...>>
+struct tuple_element<0, tuple<Head, Tail...>>
 {
 	typedef Head type;
 };
+
+template<size_t I, typename... Ts>
+using tuple_element_t = typename tuple_element<I, Ts...>::type;
 
 namespace detail {
 
@@ -89,25 +92,32 @@ template< class T >
 class tuple_size; /*undefined*/
 
 template< class... Types >
-class tuple_size< std::tuple<Types...> >
- : public std::integral_constant<std::size_t, sizeof...(Types)> { };
+class tuple_size< tuple<Types...> >
+ : public integral_constant<size_t, sizeof...(Types)> { };
 
 template< class T >
 class tuple_size<const T>
- : public std::integral_constant<std::size_t, tuple_size<T>::value> { };
+ : public integral_constant<size_t, tuple_size<T>::value> { };
 
 template< class T >
 class tuple_size< volatile T >
- : public std::integral_constant<std::size_t, tuple_size<T>::value> { };
+ : public integral_constant<size_t, tuple_size<T>::value> { };
 
 template< class T >
 class tuple_size< const volatile T >
- : public std::integral_constant<std::size_t, tuple_size<T>::value> { };
+ : public integral_constant<size_t, tuple_size<T>::value> { };
 
 #if __cplusplus >= 201703L // c++17
 template< class T >
 inline constexpr size_t tuple_size_v = tuple_size<T>::value;
 #endif
+
+template <typename... Elements>
+constexpr
+tuple<Elements &&...> forward_as_tuple(Elements &&...args) noexcept
+{
+	return tuple<Elements &&...>(forward<Elements>(args)...);
+}
 
 namespace detail {
 	template <class T>
@@ -123,13 +133,13 @@ namespace detail {
 	};
 	
 	template <class T>
-	using special_decay_t = typename unwrap_refwrapper<typename std::decay<T>::type>::type;
+	using special_decay_t = typename unwrap_refwrapper<typename decay<T>::type>::type;
 }
  
 template <typename... Types>
 auto make_tuple(Types&&... args)
 {
-	return std::tuple<detail::special_decay_t<Types>...>(std::forward<Types>(args)...);
+	return tuple<detail::special_decay_t<Types>...>(forward<Types>(args)...);
 }
 
-}
+} // namespace std

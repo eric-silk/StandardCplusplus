@@ -119,76 +119,6 @@ template<class T>
 struct is_same<T, T> : std::true_type {};
 
 /// is_integral
-template <class I>
-class __is_integer
-{
-public:
-	typedef false_type value;
-};
-
-template <>
-class __is_integer<unsigned int>
-{
-public:
-	typedef true_type value;
-};
-
-template <>
-class __is_integer<signed int>
-{
-public:
-	typedef true_type value;
-};
-
-template <>
-class __is_integer<short unsigned int>
-{
-public:
-	typedef true_type value;
-};
-
-template <>
-class __is_integer<short signed int>
-{
-public:
-	typedef true_type value;
-};
-
-template <>
-class __is_integer<char>
-{
-public:
-	typedef true_type value;
-};
-
-template <>
-class __is_integer<signed char>
-{
-public:
-	typedef true_type value;
-};
-
-template <>
-class __is_integer<unsigned char>
-{
-public:
-	typedef true_type value;
-};
-
-template <>
-class __is_integer<long unsigned int>
-{
-public:
-	typedef true_type value;
-};
-
-template <>
-class __is_integer<long signed int>
-{
-public:
-	typedef true_type value;
-};
-
 namespace detail {
 
 	template <class _Tp> struct __libcpp_is_integral                     : public false_type {};
@@ -206,11 +136,28 @@ namespace detail {
 	template <>          struct __libcpp_is_integral<long>               : public true_type {};
 	template <>          struct __libcpp_is_integral<unsigned long>      : public true_type {};
 	template <>          struct __libcpp_is_integral<long long>          : public true_type {};
-	template <> struct __libcpp_is_integral<unsigned long long> : public true_type {};
+	template <>          struct __libcpp_is_integral<unsigned long long> : public true_type {};
 
 } // detail
 
 template<typename T>
 struct is_integral: detail::__libcpp_is_integral<typename remove_cv<T>::type> {};
+
+template <typename T>
+using is_integral_v = typename is_integral<T>::value;
+
+/// is_floating_point
+template <class T>
+struct is_floating_point
+	: integral_constant<
+		  bool,
+		  is_same<float, typename remove_cv<T>::type>::value ||
+		  is_same<double, typename remove_cv<T>::type>::value ||
+		  is_same<long double, typename remove_cv<T>::type>::value>
+{
+};
+
+template <typename T>
+using is_floating_point_v = typename is_floating_point<T>::value;
 
 }
