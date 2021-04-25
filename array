@@ -86,14 +86,14 @@ public:
 		return &(mElements[N]);
 	}
 
-	constexpr auto empty() -> bool {
+	constexpr auto empty() const -> bool {
 		return size() == 0;
 	}
 
-	constexpr auto size() -> size_t {
+	constexpr auto size() const -> size_t {
 		return N;
 	}
-	constexpr auto max_size() -> size_t {
+	constexpr auto max_size() const -> size_t {
 		return N;
 	}
 
